@@ -6,7 +6,7 @@ pub mod rand;
 
 mod data;
 
-pub use data::{ContractInfo, ContractInfoStored, Callback, CallbackStored};
+pub use data::{ContractInfo, ContractInfoStored, Callback, CallbackStored, ContractInstantiationInfo};
 
 /// Attempting to canonicalize an empty address will fail. 
 /// This function skips calling `canonical_address` if the input is empty.
