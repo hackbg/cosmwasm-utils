@@ -7,8 +7,9 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Env, Binary};
 
-use crate::rand::{sha_256, Prng};
+use crate::crypto::{sha_256, Prng, create_hashed_password};
 
+pub const VIEWING_KEY_SIZE: usize = 32;
 const VIEWING_KEY_PREFIX: &str = "api_key_";
 
 #[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq)]
@@ -32,6 +33,14 @@ impl ViewingKey {
         let key = sha_256(&rand_slice);
 
         Self(VIEWING_KEY_PREFIX.to_string() + &Binary::from(&key).to_base64())
+    }
+
+    pub fn to_hashed(&self) -> [u8; VIEWING_KEY_SIZE] {
+        create_hashed_password(&self.0)
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_bytes()
     }
 }
 
