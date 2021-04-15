@@ -21,7 +21,7 @@ pub fn sha_256(data: &[u8]) -> [u8; 32] {
     result
 }
 
-pub fn ct_slice_compare(s1: &[u8], s2: &[u8]) -> bool {
+pub fn compare_slice_ct_time(s1: &[u8], s2: &[u8]) -> bool {
     bool::from(s1.ct_eq(s2))
 }
 

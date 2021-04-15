@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Env, Binary};
 
-use crate::crypto::{sha_256, Prng, create_hashed_password};
+use crate::crypto::{sha_256, Prng, create_hashed_password, compare_slice_ct_time};
 
 pub const VIEWING_KEY_SIZE: usize = 32;
 const VIEWING_KEY_PREFIX: &str = "api_key_";
@@ -41,6 +41,12 @@ impl ViewingKey {
 
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+
+    pub fn check_viewing_key(&self, hashed_pw: &[u8]) -> bool {
+        let mine_hashed = create_hashed_password(&self.0);
+
+        compare_slice_ct_time(&mine_hashed, hashed_pw)
     }
 }
 
