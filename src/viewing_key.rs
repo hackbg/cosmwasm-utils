@@ -2,18 +2,21 @@
 
 use std::fmt;
 
+use cosmwasm_std::{Env, Binary};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Env, Binary};
-
-use crate::crypto::{sha_256, Prng, create_hashed_password, compare_slice_ct_time};
+use crate::crypto::{sha_256, Prng, compare_slice_ct_time};
 
 pub const VIEWING_KEY_SIZE: usize = 32;
 const VIEWING_KEY_PREFIX: &str = "api_key_";
 
 #[derive(Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq)]
 pub struct ViewingKey(pub String);
+
+pub fn create_hashed_password(s1: &str) -> [u8; VIEWING_KEY_SIZE] {
+    sha_256(s1.as_bytes())
+}
 
 impl ViewingKey {
     ///A good source for the `seed` and `entropy` values is https://www.random.org/strings/
