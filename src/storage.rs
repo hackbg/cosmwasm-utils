@@ -1,6 +1,6 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use cosmwasm_std::{ReadonlyStorage, StdError, StdResult, Storage, from_slice, to_vec};
+use cosmwasm_std::{ReadonlyStorage, StdResult, Storage, from_slice, to_vec};
 
 pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
     storage.set(key, &to_vec(value)?);
@@ -11,17 +11,14 @@ pub fn remove<S: Storage>(storage: &mut S, key: &[u8]) {
     storage.remove(key);
 }
 
-/// Returns a StdError::SerializeErr if there is no item with that key.
-pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<T> {
-    let result = storage.get(key).ok_or_else(||
-        StdError::SerializeErr { 
-            source: "load".into(),
-            msg: "key not found".into(),
-            backtrace: None
-        }
-    )?;
+pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<Option<T>> {
+    let result = storage.get(key);
 
-    from_slice(&result)
+    if let Some(data) = result {
+        from_slice(&data)
+    } else {
+        Ok(None)
+    }
 }
 
 pub fn ns_save<T: Serialize, S: Storage>(storage: &mut S, namespace: &[u8], key: &[u8], value: &T) -> StdResult<()> {
@@ -36,8 +33,7 @@ pub fn ns_remove<S: Storage>(storage: &mut S, namespace: &[u8], key: &[u8]) {
     storage.remove(&key);
 }
 
-/// Returns a StdError::SerializeErr if there is no item with that key in the namespace.
-pub fn ns_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, namespace: &[u8], key: &[u8]) -> StdResult<T> {
+pub fn ns_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, namespace: &[u8], key: &[u8]) -> StdResult<Option<T>> {
     let key = concat(namespace, key);
 
     load(storage, &key)
