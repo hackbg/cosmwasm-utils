@@ -1,35 +1,17 @@
-use serde::{Serialize, de::DeserializeOwned};
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 use cosmwasm_std::{ReadonlyStorage, StdError, StdResult, Storage, from_slice, to_vec};
 
-/// Returns StdResult<()> resulting from saving an item to storage
-///
-/// # Arguments
-///
-/// * `storage` - a mutable reference to the storage this item should go to
-/// * `key` - a byte slice representing the key to access the stored item
-/// * `value` - a reference to the item to store
 pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
     storage.set(key, &to_vec(value)?);
     Ok(())
 }
 
-/// Removes an item from storage
-///
-/// # Arguments
-///
-/// * `storage` - a mutable reference to the storage this item is in
-/// * `key` - a byte slice representing the key that accesses the stored item
 pub fn remove<S: Storage>(storage: &mut S, key: &[u8]) {
     storage.remove(key);
 }
 
-/// Returns StdResult<T> from retrieving the item with the specified key. Returns a
-/// StdError::NotFound if there is no item with that key
-///
-/// # Arguments
-///
-/// * `storage` - a reference to the storage this item is in
-/// * `key` - a byte slice representing the key that accesses the stored item
+/// Returns a StdError::SerializeErr if there is no item with that key.
 pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<T> {
     let result = storage.get(key).ok_or_else(||
         StdError::SerializeErr { 
@@ -40,4 +22,31 @@ pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) ->
     )?;
 
     from_slice(&result)
+}
+
+pub fn ns_save<T: Serialize, S: Storage>(storage: &mut S, namespace: &[u8], key: &[u8], value: &T) -> StdResult<()> {
+    let key = concat(namespace, key);
+    storage.set(&key, &to_vec(value)?);
+
+    Ok(())
+}
+
+pub fn ns_remove<S: Storage>(storage: &mut S, namespace: &[u8], key: &[u8]) {
+    let key = concat(namespace, key);
+    storage.remove(&key);
+}
+
+/// Returns a StdError::SerializeErr if there is no item with that key in the namespace.
+pub fn ns_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &mut S, namespace: &[u8], key: &[u8]) -> StdResult<T> {
+    let key = concat(namespace, key);
+
+    load(storage, &key)
+}
+
+#[inline]
+fn concat(namespace: &[u8], key: &[u8]) -> Vec<u8> {
+    let mut k = namespace.to_vec();
+    k.extend_from_slice(key);
+
+    k
 }
