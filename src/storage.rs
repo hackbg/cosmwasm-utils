@@ -37,7 +37,7 @@ pub fn ns_remove<S: Storage>(storage: &mut S, namespace: &[u8], key: &[u8]) {
 }
 
 /// Returns a StdError::SerializeErr if there is no item with that key in the namespace.
-pub fn ns_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &mut S, namespace: &[u8], key: &[u8]) -> StdResult<T> {
+pub fn ns_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, namespace: &[u8], key: &[u8]) -> StdResult<T> {
     let key = concat(namespace, key);
 
     load(storage, &key)
