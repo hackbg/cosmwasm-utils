@@ -6,7 +6,7 @@ pub mod crypto;
 
 mod data;
 
-pub use data::{ContractInfo, ContractInfoStored, Callback, CallbackStored, ContractInstantiationInfo};
+pub use data::*;
 
 /// Attempting to canonicalize an empty address will fail. 
 /// This function skips calling `canonical_address` if the input is empty.
