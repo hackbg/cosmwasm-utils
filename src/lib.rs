@@ -3,6 +3,7 @@ use cosmwasm_std::{CanonicalAddr, HumanAddr, Api, StdResult};
 pub mod viewing_key;
 pub mod storage;
 pub mod crypto;
+pub mod convert;
 
 mod data;
 
