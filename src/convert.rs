@@ -1,4 +1,6 @@
 use cosmwasm_std::{StdResult, StdError};
+use crate::u256_math;
+use crate::u256_math::U256;
 
 /// Convert between tokens with different decimals.
 ///
@@ -14,10 +16,14 @@ pub fn convert_token(
     input_decimals: u8,
     output_decimals: u8
 ) -> StdResult<u128> {
-    let err_msg = "Upper bound overflow detected.";
+    let err_msg = "u128 overflow detected.";
 
     // result = amount * rate / one whole output token
-    let mut result = amount.checked_mul(rate).ok_or_else(||
+ 
+    let amount = Some(U256::from(amount));
+    let rate = Some(U256::from(rate));
+
+    let mut result = u256_math::mul(amount, rate).ok_or_else(|| 
         StdError::generic_err(err_msg)
     )?;
 
@@ -27,21 +33,36 @@ pub fn convert_token(
         let compensation = get_whole_token_representation(
             output_decimals - input_decimals
         );
+        let compensation = Some(U256::from(compensation));
 
-        result = result.checked_mul(compensation).ok_or_else(|| 
+        result = u256_math::mul(Some(result), compensation).ok_or_else(|| 
             StdError::generic_err(err_msg) 
         )?;
     } else if output_decimals < input_decimals {
         let compensation = get_whole_token_representation(
             input_decimals - output_decimals
         );
+        let compensation = Some(U256::from(compensation));
 
-        result /= compensation;
+        result = u256_math::div(Some(result), compensation).ok_or_else(|| 
+            StdError::generic_err(err_msg) 
+        )?;
     }
 
-    let one_output_token = get_whole_token_representation(output_decimals);
+    let whole_token = Some(U256::from(
+        get_whole_token_representation(output_decimals)
+    ));
 
-    Ok(result / one_output_token)
+    let result = u256_math::div(Some(result), whole_token).ok_or_else(||
+        StdError::generic_err(err_msg)
+    )?;
+
+    // Check if resulting u128 would overflow
+    if result.0[3] > 0 {
+        return Err(StdError::generic_err(err_msg));
+    }
+
+    Ok(result.low_u128())
 }
 
 /// Get the amount needed to represent 1 whole token given its decimals.
